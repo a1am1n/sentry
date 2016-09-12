@@ -10,11 +10,10 @@ import RuleNodeList from './ruleNodeList';
 
 const RuleEditor = React.createClass({
   propTypes: {
-    actions: React.PropTypes.array.isRequired,
-    conditions: React.PropTypes.array.isRequired,
+    config: React.PropTypes.object.isRequired,
     rule: React.PropTypes.object.isRequired,
-    project: React.PropTypes.object.isRequired,
-    organization: React.PropTypes.object.isRequired
+    projectId: React.PropTypes.string.isRequired,
+    orgId: React.PropTypes.string.isRequired
   },
 
   mixins: [
@@ -64,9 +63,9 @@ const RuleEditor = React.createClass({
       name: name
     };
     let rule = this.props.rule;
-    let project = this.props.project;
-    let org = this.props.organization;
-    let endpoint = `/projects/${org.slug}/${project.slug}/rules/`;
+    let projectId = this.props.projectId;
+    let orgId = this.props.orgId;
+    let endpoint = `/projects/${orgId}/${projectId}/rules/`;
     if (rule.id) {
       endpoint += rule.id + '/';
     }
@@ -97,7 +96,7 @@ const RuleEditor = React.createClass({
   },
 
   render() {
-    let rule = this.props.rule;
+    let {rule, config} = this.props;
     let {loading, error} = this.state;
     let {actionMatch, actions, conditions, name} = rule;
 
@@ -144,7 +143,7 @@ const RuleEditor = React.createClass({
               <p className="error">{t('Ensure at least one condition is enabled and all required fields are filled in.')}</p>
             }
 
-            <RuleNodeList nodes={this.props.conditions}
+            <RuleNodeList nodes={config.conditions}
               initialItems={conditions}
               className="rule-condition-list"
               onChange={this.onConditionsChange} />
@@ -155,7 +154,7 @@ const RuleEditor = React.createClass({
               <p className="error">{t('Ensure at least one condition is enabled and all required fields are filled in.')}</p>
             }
 
-            <RuleNodeList nodes={this.props.actions}
+            <RuleNodeList nodes={config.actions}
               initialItems={actions}
               className="rule-action-list"
               onChange={this.onActionsChange} />

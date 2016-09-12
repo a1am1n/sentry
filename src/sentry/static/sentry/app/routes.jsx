@@ -33,6 +33,7 @@ import OrganizationTeams from './views/organizationTeams';
 import AllTeamsList from './views/organizationTeams/allTeamsList';
 import ProjectAlertSettings from './views/projectAlertSettings';
 import ProjectAlertRules from './views/projectAlertRules';
+import ProjectAlertRuleDetails from './views/projectAlertRuleDetails';
 import ProjectChooser from './views/projectChooser';
 import ProjectCspSettings from './views/projectCspSettings';
 import ProjectDashboard from './views/projectDashboard';
@@ -141,6 +142,7 @@ function routes() {
           <Route path="settings/" component={errorHandler(ProjectSettings)}>
             <Route path="alerts/" component={errorHandler(ProjectAlertSettings)} />
             <Route path="alerts/rules/" component={errorHandler(ProjectAlertRules)} />
+            <Route path="alerts/rules/:ruleId/" component={errorHandler(ProjectAlertRuleDetails)} />
             <Route path="install/" component={errorHandler(ProjectInstall)}>
               <IndexRoute component={errorHandler(ProjectInstallOverview)}/>
               <Route path=":platform/" component={errorHandler(ProjectInstallPlatform)}/>

@@ -1,9 +1,9 @@
 import React from 'react';
-import underscore from 'underscore';
 
 import {
   Form,
   FormState,
+  NumberField,
   PasswordField,
   Select2Field,
   Select2FieldAutocomplete,
@@ -11,10 +11,55 @@ import {
   TextareaField,
 } from '../../components/forms';
 import {Client} from '../../api';
-import IndicatorStore from '../../stores/indicatorStore';
 import LoadingIndicator from '../../components/loadingIndicator';
-import {t} from '../../locale';
 import {defined} from '../../utils';
+
+class FormField extends React.Component {
+  render() {
+    let state = this.props.state || this.context.formState;
+    let config = this.props.config;
+    let required = defined(config.required) ? config.required : true;
+    let props = Object.assign(Object.assign({}, config), {
+      value: state.data[config.name],
+      onChange: state.onChangeField.bind(this, config.name),
+      label: config.label + (required ? '*' : ''),
+      placeholder: config.placeholder,
+      required: required,
+      name: config.name,
+      error: state.errors[config.name],
+      disabled: config.readonly,
+      key: config.name,
+      help: <span dangerouslySetInnerHTML={{__html: config.help}}/>
+    });
+
+    switch (config.type) {
+      case 'secret':
+        return <PasswordField {...props} />;
+      case 'string':
+      case 'text':
+      case 'url':
+        return <TextField {...props} />;
+      case 'number':
+        return <NumberField {...props} />;
+      case 'textarea':
+        return <TextareaField {...props} />;
+      case 'choice':
+      case 'select':
+        if (props.has_autocomplete) {
+          return <Select2FieldAutocomplete {...props} />;
+        }
+        return <Select2Field {...props} />;
+      default:
+        return null;
+    }
+  }
+}
+
+FormField.propTypes = {
+    state: React.PropTypes.instanceOf(FormState).isRequired,
+    config: React.PropTypes.object.isRequired,
+    onChange: React.PropTypes.func,
+};
 
 
 class PluginSettings extends React.Component {
@@ -26,10 +71,15 @@ class PluginSettings extends React.Component {
 
     this.state = {
       fieldList: null,
-      initialData: null,
-      formData: null,
-      errors: {},
-      state: FormState.READY
+      formState: new FormState(),
+    };
+  }
+
+  getInitialState() {
+    return {
+      loading: true,
+      error: false,
+      initialData: {},
     };
   }
 
@@ -53,87 +103,16 @@ class PluginSettings extends React.Component {
     );
   }
 
-  changeField(name, value) {
-    let formData = this.state.formData;
-    formData[name] = value;
-    // upon changing a field, remove errors
-    let errors = this.state.errors;
-    delete errors[name];
-    this.setState({formData: formData, errors: errors});
-  }
-
-  renderField(field) {
-    let el;
-    let required = defined(field.required) ? field.required : true;
-    let props = {
-      value: this.state.formData[field.name],
-      onChange: this.changeField.bind(this, field.name),
-      label: field.label + (required ? '*' : ''),
-      placeholder: field.placeholder,
-      name: field.name,
-      error: this.state.errors[field.name],
-      disabled: field.readonly,
-      key: field.name,
-      help: <span dangerouslySetInnerHTML={{__html: field.help}}/>
-    };
-
-    switch (field.type) {
-      case 'secret':
-        el = <PasswordField {...props} />;
-        break;
-      case 'text':
-      case 'url':
-        el = <TextField {...props} />;
-        break;
-      case 'textarea':
-        el = <TextareaField {...props} />;
-        break;
-      case 'select':
-        if (field.has_autocomplete) {
-          el = <Select2FieldAutocomplete {...props} />;
-        } else {
-          props.choices = field.choices;
-          el = <Select2Field {...props} />;
-        }
-        break;
-      default:
-        el = null;
-    }
-    return el;
-  }
-
-  onSubmit() {
-    if (this.state.state == FormState.SAVING) {
-      return;
-    }
-    this.setState({
-      state: FormState.SAVING,
-    }, () => {
-      let loadingIndicator = IndicatorStore.add(t('Saving changes..'));
-      this.api.request(this.getPluginEndpoint(), {
-        data: this.state.formData,
-        method: 'PUT',
-        success: (data) => {
-          this.setState({
-            formData: data,
-            initialData: Object.assign({}, data),
-            state: FormState.READY,
-            errors: {},
-          });
-        },
-        error: (error) => {
-          this.setState({
-            state: FormState.ERROR,
-            errors: (error.responseJSON || {}).errors || {},
-          });
-          IndicatorStore.add(t('Unable to save changes. Please try again.'), 'error', {
-            duration: 3000
-          });
-        },
-        complete: () => {
-          IndicatorStore.remove(loadingIndicator);
-        }
-      });
+  onSubmit(data, success, failure) {
+    this.api.request(this.getPluginEndpoint(), {
+      data: data,
+      method: 'PUT',
+      success: () => {
+        success();
+      },
+      error: (error) => {
+        failure((error.responseJSON || {}).errors);
+      },
     });
   }
 
@@ -145,15 +124,16 @@ class PluginSettings extends React.Component {
           formData[field.name] = field.value || field.defaultValue;
         });
         this.setState({
+          error: false,
+          loading: false,
+          initialData: formData,
           fieldList: data.config,
-          state: FormState.LOADING,
-          formData: formData,
-          initialData: Object.assign({}, formData)
         });
       },
       error: (error) => {
         this.setState({
-          state: FormState.ERROR,
+          error: true,
+          loading: false,
         });
       }
     });
@@ -163,11 +143,9 @@ class PluginSettings extends React.Component {
     if (!this.state.fieldList) {
       return <LoadingIndicator />;
     }
-    let isSaving = this.state.state === FormState.SAVING;
-    let hasChanges = !underscore.isEqual(this.state.initialData, this.state.formData);
     return (
-      <Form onSubmit={this.onSubmit} submitDisabled={isSaving || !hasChanges}>
-        {this.state.fieldList.map(f => this.renderField(f))}
+      <Form onSubmit={this.onSubmit} initial={this.state.initialData}>
+        {this.state.fieldList.map(f => <FormField key={f.name} config={f} />)}
       </Form>
     );
   }

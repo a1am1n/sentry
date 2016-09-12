@@ -50,9 +50,8 @@ const RuleNodeList = React.createClass({
   },
 
   onDeleteRow(idx, e) {
-    this.state.items.splice(idx, 1);
     this.setState({
-      items: this.state.items
+      items: this.state.items.splice(idx, 1),
     });
   },
 
@@ -80,7 +79,7 @@ const RuleNodeList = React.createClass({
             <option key="blank" />
             {this.props.nodes.map((node) => {
               return (
-                <option value={node.id} key={node.id}>{node.label}</option>
+                <option value={node.id} key={node.id}>{node.nameRaw}</option>
               );
             })}
           </SelectInput>

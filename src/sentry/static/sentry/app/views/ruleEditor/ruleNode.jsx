@@ -6,7 +6,7 @@ const RuleNode = React.createClass({
   propTypes: {
     data: React.PropTypes.object.isRequired,
     node: React.PropTypes.shape({
-      html: React.PropTypes.string.isRequired
+      name: React.PropTypes.string.isRequired
     }).isRequired,
     onDelete: React.PropTypes.func.isRequired
   },
@@ -37,13 +37,26 @@ const RuleNode = React.createClass({
     });
   },
 
+  formattedName() {
+    let node = this.props.node;
+    return node.nameRaw.replace(/\{([^\}]+)\}/g, (m, name) => {
+      let out = m;
+      node.config.forEach((c) => {
+        if (c.name === name) {
+          out = c.type;
+        }
+      });
+      return out;
+    });
+  },
+
   render() {
     let {data, node} = this.props;
     return (
       <tr>
         <td className="rule-form">
           <input type="hidden" name="id" value={data.id} />
-          <span ref="html" dangerouslySetInnerHTML={{__html: node.html}} />
+          <span ref="html" dangerouslySetInnerHTML={{__html: this.formattedName(node)}} />
         </td>
         <td className="align-right">
           <a onClick={this.props.onDelete}>

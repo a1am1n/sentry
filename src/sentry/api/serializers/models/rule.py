@@ -6,15 +6,24 @@ from sentry.api.serializers import Serializer, register
 from sentry.models import Rule
 
 
-def _generate_rule_label(project, rule, data):
+def _serialize_node(project, rule, data):
     from sentry.rules import rules
 
     rule_cls = rules.get(data['id'])
     if rule_cls is None:
-        return
+        return {}
 
-    rule_inst = rule_cls(project, data=data, rule=rule)
-    return rule_inst.render_label()
+    node = rule_cls(project, data=data, rule=rule)
+
+    return {
+        'id': node.id,
+        'name': node.render_label(),
+        'data': {
+            k: v
+            for k, v in six.iteritems(node.data)
+            if k != 'id'
+        }
+    }
 
 
 @register(Rule)
@@ -25,14 +34,12 @@ class RuleSerializer(Serializer):
             # as part of the rule editor
             'id': six.text_type(obj.id) if obj.id else None,
             'conditions': [
-                dict({
-                    'name': _generate_rule_label(obj.project, obj, o),
-                }, **o) for o in obj.data.get('conditions', [])
+                _serialize_node(obj.project, obj, o)
+                for o in obj.data.get('conditions', [])
             ],
             'actions': [
-                dict({
-                    'name': _generate_rule_label(obj.project, obj, o),
-                }, **o) for o in obj.data.get('actions', [])
+                _serialize_node(obj.project, obj, o)
+                for o in obj.data.get('actions', [])
             ],
             'actionMatch': obj.data.get('action_match', 'all'),
             'name': obj.label,

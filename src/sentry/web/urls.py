@@ -62,7 +62,6 @@ from sentry.web.frontend.project_plugins import ProjectPluginsView
 from sentry.web.frontend.project_quotas import ProjectQuotasView
 from sentry.web.frontend.project_release_tracking import \
     ProjectReleaseTrackingView
-from sentry.web.frontend.project_rule_edit import ProjectRuleEditView
 from sentry.web.frontend.project_settings import ProjectSettingsView
 from sentry.web.frontend.project_tags import ProjectTagsView
 from sentry.web.frontend.react_page import GenericReactPageView, ReactPageView
@@ -406,13 +405,6 @@ urlpatterns += patterns(
     url(r'^(?P<organization_slug>[\w_-]+)/(?P<project_slug>[\w_-]+)/settings/quotas/$',
         ProjectQuotasView.as_view(),
         name='sentry-manage-project-quotas'),
-
-    url(r'^(?P<organization_slug>[\w_-]+)/(?P<project_slug>[\w_-]+)/settings/alerts/new/$',
-        ProjectRuleEditView.as_view(),
-        name='sentry-new-project-rule'),
-    url(r'^(?P<organization_slug>[\w_-]+)/(?P<project_slug>[\w_-]+)/settings/alerts/(?P<rule_id>\d+)/$',
-        ProjectRuleEditView.as_view(),
-        name='sentry-edit-project-rule'),
 
     url(r'^avatar/(?P<avatar_id>[^\/]+)/$',
         UserAvatarPhotoView.as_view(),

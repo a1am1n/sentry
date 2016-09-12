@@ -1,4 +1,5 @@
 import React from 'react';
+import {Link} from 'react-router';
 import underscore from 'underscore';
 
 import ApiMixin from '../mixins/apiMixin';
@@ -232,11 +233,11 @@ const ProjectAlertSettings = React.createClass({
     let plugins = project.plugins.filter(p => p.type == 'notification');
     return (
       <div>
-        <a href={`/${orgId}/${projectId}/settings/alerts/new/`}
-           className="btn pull-right btn-primary btn-sm">
+        <Link to={`/${orgId}/${projectId}/settings/alerts/new/`}
+              className="btn pull-right btn-primary btn-sm">
           <span className="icon-plus" />
           {t('New Alert Rule')}
-        </a>
+        </Link>
         <h2>{t('Alerts')}</h2>
 
         <ul className="nav nav-tabs" style={{borderBottom: '1px solid #ddd'}}>

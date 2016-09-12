@@ -1,4 +1,5 @@
 import React from 'react';
+import {Link} from 'react-router';
 
 import ApiMixin from '../mixins/apiMixin';
 import IndicatorStore from '../stores/indicatorStore';
@@ -53,19 +54,19 @@ const RuleRow = React.createClass({
 
   render() {
     let {orgId, projectId, data} = this.props;
-    let editLink = `/${orgId}/${projectId}/settings/alerts/${data.id}/`;
+    let editLink = `/${orgId}/${projectId}/settings/alerts/rules/${data.id}/`;
     return (
       <div className="box">
         <div className="box-header">
           <div className="pull-right">
-            <a className="btn btn-sm btn-default"
-                href={editLink}>{t('Edit Rule')}</a>
+            <Link className="btn btn-sm btn-default"
+                  to={editLink}>{t('Edit Rule')}</Link>
             <a className="btn btn-sm btn-default"
                onClick={this.onDelete}>
               <span className="icon-trash" style={{marginRight: 3}} />
             </a>
           </div>
-          <h3><a href={editLink}>{data.name}</a></h3>
+          <h3><Link to={editLink}>{data.name}</Link></h3>
         </div>
         <div className="box-content with-padding">
           <div className="row">
@@ -74,13 +75,15 @@ const RuleRow = React.createClass({
                 <div>
                   <h6>When <strong>{data.actionMatch}</strong> of these conditions are met:</h6>
                   <table className="conditions-list table">
-                  {data.conditions.map((condition) => {
-                    return (
-                      <tr>
-                        <td>{condition.name}</td>
-                      </tr>
-                    );
-                  })}
+                    <tbody>
+                      {data.conditions.map((condition, cIdx) => {
+                        return (
+                          <tr key={cIdx}>
+                            <td>{condition.name}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
                   </table>
                 </div>
               }
@@ -90,13 +93,15 @@ const RuleRow = React.createClass({
                 <div>
                   <h6>Take these actions:</h6>
                   <table className="actions-list table">
-                  {data.actions.map((action) => {
-                    return (
-                      <tr>
-                        <td>{action.name}</td>
-                      </tr>
-                    );
-                  })}
+                    <tbody>
+                      {data.actions.map((action, aIdx) => {
+                        return (
+                          <tr key={aIdx}>
+                            <td>{action.name}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
                   </table>
                 </div>
               }
@@ -202,11 +207,11 @@ const ProjectAlertRules = React.createClass({
     let {orgId, projectId} = this.props.params;
     return (
       <div>
-        <a href={`/${orgId}/${projectId}/settings/alerts/new/`}
-           className="btn pull-right btn-primary btn-sm">
+        <Link to={`/${orgId}/${projectId}/settings/alerts/new/`}
+              className="btn pull-right btn-primary btn-sm">
           <span className="icon-plus" />
           {t('New Alert Rule')}
-        </a>
+        </Link>
         <h2>{t('Alerts')}</h2>
 
         <ul className="nav nav-tabs" style={{borderBottom: '1px solid #ddd'}}>
